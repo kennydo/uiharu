@@ -20,6 +20,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'alembic==0.8.2',
+        'PyMySQL==0.6.6',
         'pyusb==1.0.0b1',
         'SQLAlchemy==1.0.8',
         'temperusb==1.2.3',
