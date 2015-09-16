@@ -28,5 +28,8 @@ setup(
     tests_require=[
     ],
     entry_points={
+        'console_scripts': [
+            'uiharu-collector = uiharu.bin.collector:main',
+        ],
     },
 )
