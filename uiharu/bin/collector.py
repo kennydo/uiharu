@@ -106,7 +106,7 @@ def main():
         log.info("Collected the temperature in Celsius: %f", temperature)
         measurement = TemperatureMeasurement(
             sensor_name=args.sensor_name,
-            timestamp=datetime.datetime.now(),
+            timestamp=datetime.datetime.utcnow(),
             value=temperature,
         )
         session = Session()
