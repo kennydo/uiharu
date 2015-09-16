@@ -22,6 +22,7 @@ setup(
         'alembic==0.8.2',
         'PyMySQL==0.6.6',
         'pyusb==1.0.0b1',
+        'simplejson==3.8.0',
         'SQLAlchemy==1.0.8',
         'temperusb==1.2.3',
     ],
