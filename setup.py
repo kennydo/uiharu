@@ -20,6 +20,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         'alembic==0.8.2',
+        'Flask==0.10.1',
+        'Flask-SQLAlchemy==2.0',
         'PyMySQL==0.6.6',
         'pyusb==1.0.0b1',
         'simplejson==3.8.0',
@@ -31,6 +33,7 @@ setup(
     entry_points={
         'console_scripts': [
             'uiharu-collector = uiharu.bin.collector:main',
+            'uiharu-server = uiharu.bin.server:main',
         ],
     },
 )

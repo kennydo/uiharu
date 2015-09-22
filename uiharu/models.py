@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-from sqlalchemy.ext.declarative import declarative_base
+from flask.ext.sqlalchemy import SQLAlchemy
 
 
 meta = sa.MetaData(naming_convention={
@@ -9,10 +9,10 @@ meta = sa.MetaData(naming_convention={
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s"
 })
-Base = declarative_base(metadata=meta)
+db = SQLAlchemy()
 
 
-class TemperatureMeasurement(Base):
+class TemperatureMeasurement(db.Model):
     """A single temperature measurement"""
 
     __tablename__ = 'temperature_measurements'
@@ -22,6 +22,7 @@ class TemperatureMeasurement(Base):
     sensor_name = sa.Column(sa.String(length=128), nullable=False)
     # This timestamp is always in UTC
     timestamp = sa.Column(sa.DateTime, nullable=False)
+    # The value is stored in Celsius
     value = sa.Column(sa.Float, nullable=False)
 
     __table_args__ = (

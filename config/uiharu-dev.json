@@ -1,3 +1,4 @@
 {
-  "sqlalchemy_connection_url": "mysql+pymysql://uiharu:uiharu@localhost/uiharu"
+  "SQLALCHEMY_DATABASE_URI": "mysql+pymysql://uiharu:uiharu@localhost/uiharu",
+  "DEBUG": true
 }
