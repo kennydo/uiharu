@@ -1,25 +1,30 @@
 import logging
 
-from temperusb.temper import TemperHandler
+from collections import namedtuple
 
+from uiharu.vendor import Adafruit_BME280 as adafruit
 
 log = logging.getLogger(__name__)
+SensorMeasurement = namedtuple('SensorMeasurement', ['temperature', 'pressure', 'humidity'])
 
 
-class TemperatureCollector(object):
-    """Keeps track of a USB temperature sensor/s and saves measurements.
+class MeasurementCollector(object):
+    """Collects data from the BME280 sensor in a friendly format.
+
+    The BME280 sensor returns the temperature in Celsius, the barometric pressure in Pascals,
+    and the humidity in percent.
     """
 
-    def get_temperature(self):
-        """Get the degrees Celsius of the first (and only) temperature sensor, or return `None` if no sensor exists.
-
-        :return: the degrees Celsius of the temperature reading, or None if no devices
-        :rtype: float
+    def get_measurements(self):
+        """Return a :class:`SensorMeasurement`.
         """
-        devices = TemperHandler().get_devices()
+        sensor = adafruit.BME280(mode=adafruit.BME280_OSAMPLE_8)
+        temperature = sensor.read_temperature()
+        pressure = sensor.read_pressure()
+        humidity = sensor.read_humidity()
 
-        if not devices:
-            return None
-
-        # Only fetch the temperature from the first device
-        return devices[0].get_temperature()
+        return SensorMeasurement(
+            temperature=temperature,
+            pressure=pressure,
+            humidity=humidity,
+        )

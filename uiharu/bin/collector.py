@@ -1,17 +1,16 @@
 from __future__ import print_function
 
 import argparse
-import datetime
 import logging.config
 import socket
 import sys
+import datetime
 
-import sqlalchemy as sa
+from influxdb import InfluxDBClient
 
-from uiharu.collector import TemperatureCollector
+from uiharu.collector import MeasurementCollector
 from uiharu.config import ConfigAction
 from uiharu.periodic_sleeper import PeriodicSleeper
-from uiharu.models import TemperatureMeasurement
 
 
 _logging_config = dict(
@@ -54,7 +53,7 @@ def parse_cli_args():
         '--period',
         type=float,
         default=60.0,
-        help="How often to collect temperature data (in seconds)",
+        help="How often to collect data (in seconds)",
     )
     parser.add_argument(
         '--config',
@@ -62,7 +61,7 @@ def parse_cli_args():
         help="The location of the JSON config file",
     )
     parser.add_argument(
-        '--sensor-name',
+        '--hostname',
         default=hostname,
         help="The name to save collector measurements under. Defaults to this host's hostname ({0})".format(hostname),
     )
@@ -72,6 +71,28 @@ def parse_cli_args():
         help="Enable debug mode",
     )
     return parser.parse_args()
+
+
+def create_influxdb_points_body(hostname, measurements, timestamp):
+    """
+    :param str hostname: the hostname
+    :param dict measurements: a mapping of str measurement names to float values
+    :param timestamp: Unix timestamp in seconds
+    :type timestamp: :class:`datetime.datetime`
+    :return: a `list` of `dict`s
+    """
+    return [
+        dict(
+            measurement=name,
+            tags=dict(
+                host=hostname,
+            ),
+            time=timestamp,
+            fields=dict(
+                value=value,
+            )
+        ) for name, value in measurements.iteritems()
+    ]
 
 
 def main():
@@ -84,34 +105,39 @@ def main():
         print("Error: A config path must be specified", file=sys.stderr)
         sys.exit(1)
 
-    log.info("Using sensor name: %s", args.sensor_name)
+    log.info("Using sensor name: %s", args.hostname)
 
     log.info("Connecting to database")
-    engine = sa.create_engine(args.config['sqlalchemy_connection_url'])
-    Session = sa.orm.sessionmaker(bind=engine)
+    influxdb_client = InfluxDBClient(
+        host=args.config['INFLUXDB_HOST'],
+        port=args.config['INFLUXDB_PORT'],
+        database=args.config['INFLUXDB_DATABASE'],
+        username=args.config['INFLUXDB_USERNAME'],
+        password=args.config['INFLUXDB_PASSWORD'],
+        ssl=args.config['INFLUXDB_SSL'],
+    )
 
     log.info("Starting temperature collector with a collection period of %f seconds", args.period)
-    collector = TemperatureCollector()
+    collector = MeasurementCollector()
     periodic_sleeper = PeriodicSleeper(args.period)
 
     log.info("Running the collector")
     while True:
-        temperature = collector.get_temperature()
+        timestamp = datetime.datetime.utcnow()
+        sensor_measurement = collector.get_measurements()
 
-        if not temperature:
+        if not sensor_measurement:
             log.error("Could not fetch temperature. Sleeping until next collection period.")
             periodic_sleeper.sleep_until_next_period()
             continue
 
-        log.info("Collected the temperature in Celsius: %f", temperature)
-        measurement = TemperatureMeasurement(
-            sensor_name=args.sensor_name,
-            timestamp=datetime.datetime.utcnow(),
-            value=temperature,
+        log.info("Collected the measurement: %r", sensor_measurement)
+        influxdb_points = create_influxdb_points_body(
+            args.hostname,
+            sensor_measurement._asdict(),
+            timestamp=timestamp,
         )
-        session = Session()
-        session.add(measurement)
-        session.commit()
+        influxdb_client.write_points(influxdb_points)
 
         periodic_sleeper.sleep_until_next_period()
 

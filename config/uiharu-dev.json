@@ -1,4 +1,9 @@
 {
-  "SQLALCHEMY_DATABASE_URI": "mysql+pymysql://uiharu:uiharu@localhost/uiharu",
-  "DEBUG": true
+  "INFLUXDB_HOST": "TBD",
+  "INFLUXDB_PORT": 8086,
+  "INFLUXDB_DATABASE": "TBD",
+  "INFLUXDB_USERNAME": "TBD",
+  "INFLUXDB_PASSWORD": "TBD",
+  "INFLUXDB_SSL": true,
+  "DEBUG": false
 }

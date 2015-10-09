@@ -19,14 +19,8 @@ setup(
     keywords='temperature sensor',
     packages=find_packages(),
     install_requires=[
-        'alembic==0.8.2',
-        'Flask==0.10.1',
-        'Flask-SQLAlchemy==2.0',
-        'PyMySQL==0.6.6',
-        'pyusb==1.0.0b1',
+        'influxdb==2.9.2',
         'simplejson==3.8.0',
-        'SQLAlchemy==1.0.8',
-        'temperusb==1.2.3',
     ],
     tests_require=[
     ],
