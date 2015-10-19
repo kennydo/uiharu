@@ -1,5 +1,6 @@
 import datetime as dt
 
+
 def celsius_to_fahrenheit(celsius):
     """Convert degrees Celsius to degrees Fahrenheit
 
