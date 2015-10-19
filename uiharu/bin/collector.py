@@ -137,6 +137,7 @@ def main():
             sensor_measurement._asdict(),
             timestamp=timestamp,
         )
+        log.info("Sending points to InfluxDB: %r", influxdb_points)
         influxdb_client.write_points(influxdb_points)
 
         periodic_sleeper.sleep_until_next_period()
