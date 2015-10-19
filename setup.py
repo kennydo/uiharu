@@ -27,7 +27,6 @@ setup(
     entry_points={
         'console_scripts': [
             'uiharu-collector = uiharu.bin.collector:main',
-            'uiharu-server = uiharu.bin.server:main',
         ],
     },
 )

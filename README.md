@@ -6,7 +6,7 @@ I was curious about the temperature of my room, so I got a BME280 sensor from Ad
 
 First, create a virtual environment *with* system packages. The reading from the BME280 sensor requires a the `Adafruit_Python_GPIO` library, which requires system packages to be installed. Follow the instructions on https://github.com/adafruit/Adafruit_Python_GPIO.
 
-Then, run the `setup.py` from this repository:
+Then, run the `setup.py` from this repository to install this package and its dependencies:
 ```
 $ python setup.py install
 ```
