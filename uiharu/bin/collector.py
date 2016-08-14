@@ -91,7 +91,7 @@ def create_influxdb_points_body(hostname, measurements, timestamp):
             fields=dict(
                 value=value,
             )
-        ) for name, value in measurements.iteritems()
+        ) for name, value in measurements.items()
     ]
 
 
