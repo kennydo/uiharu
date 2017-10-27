@@ -22,17 +22,3 @@ To run the collector in the foreground, just activate the virtual environment an
 $ source venv/bin/activate
 $ uiharu-exporter
 ```
-
-You an also run this under systemd by modifying the example sysytemd system service unit file and installing it (replacing `myuser` with the desired user):
-```bash
-$ sudo cp etc/systemd/system/uiharu-collector@.service /etc/systemd/system
-
-# Edit the ExecStart and other properties as needed
-$ sudo vim /etc/systemd/system/uiharu-collector@.service
-
-$ sudo systemctl enable uiharu-collector@myuser.service
-$ sudo systemctl start uiharu-collector@myuser.service
-
-# Now, you should see logs
-$ sudo journalctl -u uiharu-collector@myuser
-```
