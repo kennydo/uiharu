@@ -1,45 +1,36 @@
-from __future__ import print_function
-
 import argparse
 import logging.config
 import socket
 import sys
 import datetime
 
-from influxdb import InfluxDBClient
+import prometheus_client
 
-from uiharu.collector import MeasurementCollector
+from uiharu import metrics
+from uiharu.collectors import MeasurementCollector
 from uiharu.config import ConfigAction
 from uiharu.periodic_sleeper import PeriodicSleeper
 
 
-_logging_config = dict(
-    version=1,
-    disable_existing_loggers=False,
-    formatters={
+_logging_config = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
         'verbose': {
             'format': '%(asctime)s [%(levelname)s] %(message)s'
         },
     },
-    handlers={
+    'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'null': {
-            'class': 'logging.NullHandler',
-        }
     },
-    loggers={
-        '': {
-            'handlers': ['console'],
-            'level': logging.INFO,
-        },
-        'temperusb': {
-            'level': logging.WARN,
-        },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
     },
-)
+}
 logging.config.dictConfig(_logging_config)
 log = logging.getLogger(__name__)
 
@@ -56,14 +47,10 @@ def parse_cli_args():
         help="How often to collect data (in seconds)",
     )
     parser.add_argument(
-        '--config',
-        action=ConfigAction,
-        help="The location of the JSON config file",
-    )
-    parser.add_argument(
-        '--hostname',
-        default=hostname,
-        help="The name to save collector measurements under. Defaults to this host's hostname ({0})".format(hostname),
+        '--metrics-port',
+        type=int,
+        default=9400,
+        help="Port for prometheus metrics",
     )
     parser.add_argument(
         '--debug',
@@ -101,44 +88,27 @@ def main():
         log.setLevel(logging.DEBUG)
         log.debug("Debug mode enabled")
 
-    if not args.config:
-        print("Error: A config path must be specified", file=sys.stderr)
-        sys.exit(1)
-
-    log.info("Using sensor name: %s", args.hostname)
-
-    log.info("Connecting to database")
-    influxdb_client = InfluxDBClient(
-        host=args.config['INFLUXDB_HOST'],
-        port=args.config['INFLUXDB_PORT'],
-        database=args.config['INFLUXDB_DATABASE'],
-        username=args.config['INFLUXDB_USERNAME'],
-        password=args.config['INFLUXDB_PASSWORD'],
-        ssl=args.config['INFLUXDB_SSL'],
-    )
-
     log.info("Starting temperature collector with a collection period of %f seconds", args.period)
     collector = MeasurementCollector()
     periodic_sleeper = PeriodicSleeper(args.period)
 
-    log.info("Running the collector")
-    while True:
-        timestamp = datetime.datetime.utcnow()
-        sensor_measurement = collector.get_measurements()
+    log.info("Running the metrics server on port %s", args.metrics_port)
+    prometheus_client.start_http_server(args.metrics_port)
 
-        if not sensor_measurement:
+    while True:
+        measurement = collector.get_measurements()
+
+        if not measurement:
             log.error("Could not fetch temperature. Sleeping until next collection period.")
             periodic_sleeper.sleep_until_next_period()
             continue
 
-        log.info("Collected the measurement: %r", sensor_measurement)
-        influxdb_points = create_influxdb_points_body(
-            args.hostname,
-            sensor_measurement._asdict(),
-            timestamp=timestamp,
-        )
-        log.info("Sending points to InfluxDB: %r", influxdb_points)
-        influxdb_client.write_points(influxdb_points)
+        log.info("Collected the measurement: %r", measurement)
+        metrics.SENSOR_TEMPERATURE_CELSIUS.set(measurement.temperature_c)
+        metrics.SENSOR_TEMPERATURE_FAHRENHEIT.set(measurement.temperature_f)
+        metrics.SENSOR_ATMOSPHERIC_PRESSURE_PASCALS.set(measurement.atmospheric_pressure_pascals)
+        metrics.SENSOR_RELATIVE_HUMIDITY_PERCENTAGE.set(measurement.relative_humidity_percentage)
+        metrics.SENSOR_COLLECTIONS_TOTAL.inc()
 
         periodic_sleeper.sleep_until_next_period()
 

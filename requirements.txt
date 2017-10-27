@@ -1,0 +1,4 @@
+Adafruit-GPIO==1.0.1
+Adafruit-PureIO==0.2.1
+prometheus-client==0.0.21
+spidev==3.2

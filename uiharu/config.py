@@ -1,5 +1,8 @@
 import argparse
-import simplejson as json
+from typing import Any
+from typing import Dict
+
+import yaml
 
 
 class ConfigAction(argparse.Action):
@@ -16,7 +19,8 @@ class ConfigAction(argparse.Action):
         setattr(namespace, self.dest, config)
 
 
-def get_config(config_path):
+def get_config(config_path: str) -> Dict[str, Any]:
     """Parse the JSON config file at the given path and return the `dict`."""
-    with open(config_path, 'r') as input:
-        return json.load(input)
+    with open(config_path, 'r') as config_file:
+        return yaml.load(config_file)
+

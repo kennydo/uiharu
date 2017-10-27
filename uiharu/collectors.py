@@ -1,14 +1,18 @@
 import logging
-
-from collections import namedtuple
+from typing import NamedTuple
 
 from uiharu.utils import celsius_to_fahrenheit
-from uiharu.vendor import Adafruit_BME280 as adafruit
+from uiharu.vendor.Adafruit_BME280 import BME280
 
 
 log = logging.getLogger(__name__)
-SensorMeasurement = namedtuple('SensorMeasurement',
-    ['temperature_c', 'temperature_f', 'pressure', 'humidity'])
+
+
+class SensorMeasurement(NamedTuple):
+    temperature_c: float
+    temperature_f: float
+    atmospheric_pressure_pascals: float
+    relative_humidity_percentage: float
 
 
 class MeasurementCollector(object):
@@ -18,10 +22,10 @@ class MeasurementCollector(object):
     and the humidity in percent.
     """
 
-    def get_measurements(self):
+    def get_measurements(self) -> SensorMeasurement:
         """Return a :class:`SensorMeasurement`.
         """
-        sensor = adafruit.BME280(mode=adafruit.BME280_OSAMPLE_8)
+        sensor = BME280()
 
         temperature_c = sensor.read_temperature()
         temperature_f = celsius_to_fahrenheit(temperature_c)
@@ -31,6 +35,6 @@ class MeasurementCollector(object):
         return SensorMeasurement(
             temperature_c=temperature_c,
             temperature_f=temperature_f,
-            pressure=pressure,
-            humidity=humidity,
+            atmospheric_pressure_pascals=pressure,
+            relative_humidity_percentage=humidity,
         )
